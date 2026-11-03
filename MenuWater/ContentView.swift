@@ -29,6 +29,7 @@ struct ContentView: View {
                 unit: model.volumeUnit,
                 hasDisplayNotch: model.hasDisplayNotch,
                 fullScreenReminder: model.fullScreenReminder,
+                intensiveReminder: model.intensiveReminder,
                 launchAtLogin: model.launchAtLogin,
                 age: model.age,
                 gender: model.gender,
@@ -36,6 +37,7 @@ struct ContentView: View {
                 onUnitChange: model.updateUnit,
                 onDisplayNotchChange: model.updateDisplayNotch,
                 onFullScreenReminderChange: model.updateFullScreenReminder,
+                onIntensiveReminderChange: model.updateIntensiveReminder,
                 onLaunchAtLoginChange: model.updateLaunchAtLogin,
                 onAgeChange: model.updateAge,
                 onGenderChange: model.updateGender,
@@ -171,6 +173,7 @@ private struct ContainerSettings: View {
     let unit: VolumeUnit
     let hasDisplayNotch: Bool
     let fullScreenReminder: Bool
+    let intensiveReminder: Bool
     let launchAtLogin: Bool
     let age: Int
     let gender: ProfileGender
@@ -178,6 +181,7 @@ private struct ContainerSettings: View {
     let onUnitChange: (VolumeUnit) -> Void
     let onDisplayNotchChange: (Bool) -> Void
     let onFullScreenReminderChange: (Bool) -> Void
+    let onIntensiveReminderChange: (Bool) -> Void
     let onLaunchAtLoginChange: (Bool) -> Void
     let onAgeChange: (Int) -> Void
     let onGenderChange: (ProfileGender) -> Void
@@ -239,12 +243,14 @@ private struct ContainerSettings: View {
                     unit: unit,
                     hasDisplayNotch: hasDisplayNotch,
                     fullScreenReminder: fullScreenReminder,
+                    intensiveReminder: intensiveReminder,
                     launchAtLogin: launchAtLogin,
                     onAgeChange: onAgeChange,
                     onGenderChange: onGenderChange,
                     onUnitChange: onUnitChange,
                     onDisplayNotchChange: onDisplayNotchChange,
                     onFullScreenReminderChange: onFullScreenReminderChange,
+                    onIntensiveReminderChange: onIntensiveReminderChange,
                     onLaunchAtLoginChange: onLaunchAtLoginChange,
                     onTestNow: onTryNow
                 )
@@ -272,12 +278,14 @@ private struct PersonalOptions: View {
     let unit: VolumeUnit
     let hasDisplayNotch: Bool
     let fullScreenReminder: Bool
+    let intensiveReminder: Bool
     let launchAtLogin: Bool
     let onAgeChange: (Int) -> Void
     let onGenderChange: (ProfileGender) -> Void
     let onUnitChange: (VolumeUnit) -> Void
     let onDisplayNotchChange: (Bool) -> Void
     let onFullScreenReminderChange: (Bool) -> Void
+    let onIntensiveReminderChange: (Bool) -> Void
     let onLaunchAtLoginChange: (Bool) -> Void
     let onTestNow: () -> Void
 
@@ -342,6 +350,25 @@ private struct PersonalOptions: View {
                     set: onFullScreenReminderChange
                 )
             )
+            .disabled(intensiveReminder)
+
+            Toggle(
+                "Intensive reminder",
+                isOn: Binding(
+                    get: { intensiveReminder },
+                    set: onIntensiveReminderChange
+                )
+            )
+
+            if intensiveReminder {
+                Text("Reminders stay visible until you type the five displayed keys in order.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+
+                Text("Accessibility access lets the reminder receive those keys while another app is active. It is used only while an intensive reminder is visible.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
 
             Text("Daily goal is a general estimate.")
                 .font(.caption2)

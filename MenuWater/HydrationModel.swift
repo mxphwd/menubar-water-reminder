@@ -68,6 +68,7 @@ final class HydrationModel {
         static let unit = "container.unit"
         static let hasDisplayNotch = "display.hasNotch"
         static let fullScreenReminder = "reminder.fullScreen"
+        static let intensiveReminder = "reminder.intensive"
         static let age = "profile.age"
         static let gender = "profile.gender"
     }
@@ -79,6 +80,7 @@ final class HydrationModel {
     var launchAtLogin: Bool
     var hasDisplayNotch: Bool
     var fullScreenReminder: Bool
+    var intensiveReminder: Bool
     var age: Int
     var gender: ProfileGender
     var errorMessage: String?
@@ -99,6 +101,7 @@ final class HydrationModel {
         launchAtLogin = SMAppService.mainApp.status == .enabled
         hasDisplayNotch = defaults.bool(forKey: Keys.hasDisplayNotch)
         fullScreenReminder = defaults.bool(forKey: Keys.fullScreenReminder)
+        intensiveReminder = defaults.bool(forKey: Keys.intensiveReminder)
         age = defaults.object(forKey: Keys.age) as? Int ?? 30
         gender = ProfileGender(rawValue: defaults.string(forKey: Keys.gender) ?? "") ?? .female
 
@@ -190,6 +193,11 @@ final class HydrationModel {
         defaults.set(enabled, forKey: Keys.fullScreenReminder)
     }
 
+    func updateIntensiveReminder(_ enabled: Bool) {
+        intensiveReminder = enabled
+        defaults.set(enabled, forKey: Keys.intensiveReminder)
+    }
+
     func updateLaunchAtLogin(_ enabled: Bool) {
         do {
             if enabled {
@@ -213,7 +221,8 @@ final class HydrationModel {
     func showReminderNow() {
         reminderPresenter.show(
             hasDisplayNotch: hasDisplayNotch,
-            fullScreen: fullScreenReminder
+            fullScreen: fullScreenReminder,
+            intensive: intensiveReminder
         )
     }
 
@@ -261,7 +270,8 @@ final class HydrationModel {
                 }
                 self.reminderPresenter.show(
                     hasDisplayNotch: self.hasDisplayNotch,
-                    fullScreen: self.fullScreenReminder
+                    fullScreen: self.fullScreenReminder,
+                    intensive: self.intensiveReminder
                 )
             }
         }
