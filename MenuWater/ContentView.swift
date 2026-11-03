@@ -64,6 +64,29 @@ struct ContentView: View {
         .onAppear {
             model.refreshForToday()
         }
+        .alert(
+            "Accessibility Access Required",
+            isPresented: Binding(
+                get: { model.isShowingAccessibilityInstructions },
+                set: { isPresented in
+                    if !isPresented {
+                        model.dismissAccessibilityInstructions()
+                    }
+                }
+            )
+        ) {
+            Button("Open Settings") {
+                model.openAccessibilitySettings()
+            }
+
+            Button("Not Now", role: .cancel) {
+                model.dismissAccessibilityInstructions()
+            }
+        } message: {
+            Text(
+                "To use Intensive reminder:\n\n1. Open Accessibility settings.\n2. Find Water Reminder in the list.\n3. Turn its switch on.\n4. Return here and enable Intensive reminder again.\n\nThis access is used only to receive the displayed five-key sequence while an intensive reminder is visible."
+            )
+        }
     }
 }
 
@@ -188,6 +211,7 @@ private struct ContainerSettings: View {
     let onTryNow: () -> Void
 
     @AppStorage("ui.containerSettingsExpanded") private var isContainerExpanded = false
+    @AppStorage("ui.myInfoExpanded") private var isMyInfoExpanded = false
     @AppStorage("ui.optionsExpanded") private var isOptionsExpanded = false
 
     var body: some View {
@@ -228,6 +252,28 @@ private struct ContainerSettings: View {
 
             Button {
                 withAnimation(.snappy) {
+                    isMyInfoExpanded.toggle()
+                }
+            } label: {
+                SettingsRowLabel(title: "My Info", systemImage: "person.crop.circle")
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+
+            if isMyInfoExpanded {
+                MyInfoSettings(
+                    age: age,
+                    gender: gender,
+                    unit: unit,
+                    onAgeChange: onAgeChange,
+                    onGenderChange: onGenderChange,
+                    onUnitChange: onUnitChange
+                )
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+
+            Button {
+                withAnimation(.snappy) {
                     isOptionsExpanded.toggle()
                 }
             } label: {
@@ -237,17 +283,11 @@ private struct ContainerSettings: View {
             .foregroundStyle(.secondary)
 
             if isOptionsExpanded {
-                PersonalOptions(
-                    age: age,
-                    gender: gender,
-                    unit: unit,
+                ReminderOptions(
                     hasDisplayNotch: hasDisplayNotch,
                     fullScreenReminder: fullScreenReminder,
                     intensiveReminder: intensiveReminder,
                     launchAtLogin: launchAtLogin,
-                    onAgeChange: onAgeChange,
-                    onGenderChange: onGenderChange,
-                    onUnitChange: onUnitChange,
                     onDisplayNotchChange: onDisplayNotchChange,
                     onFullScreenReminderChange: onFullScreenReminderChange,
                     onIntensiveReminderChange: onIntensiveReminderChange,
@@ -272,22 +312,13 @@ private struct ContainerSettings: View {
     }
 }
 
-private struct PersonalOptions: View {
+private struct MyInfoSettings: View {
     let age: Int
     let gender: ProfileGender
     let unit: VolumeUnit
-    let hasDisplayNotch: Bool
-    let fullScreenReminder: Bool
-    let intensiveReminder: Bool
-    let launchAtLogin: Bool
     let onAgeChange: (Int) -> Void
     let onGenderChange: (ProfileGender) -> Void
     let onUnitChange: (VolumeUnit) -> Void
-    let onDisplayNotchChange: (Bool) -> Void
-    let onFullScreenReminderChange: (Bool) -> Void
-    let onIntensiveReminderChange: (Bool) -> Void
-    let onLaunchAtLoginChange: (Bool) -> Void
-    let onTestNow: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -326,6 +357,27 @@ private struct PersonalOptions: View {
                         .tag(unit)
                 }
             }
+
+            Text("Daily goal is a general estimate.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+    }
+}
+
+private struct ReminderOptions: View {
+    let hasDisplayNotch: Bool
+    let fullScreenReminder: Bool
+    let intensiveReminder: Bool
+    let launchAtLogin: Bool
+    let onDisplayNotchChange: (Bool) -> Void
+    let onFullScreenReminderChange: (Bool) -> Void
+    let onIntensiveReminderChange: (Bool) -> Void
+    let onLaunchAtLoginChange: (Bool) -> Void
+    let onTestNow: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
 
             Toggle(
                 "Start at login",
@@ -369,10 +421,6 @@ private struct PersonalOptions: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
-
-            Text("Daily goal is a general estimate.")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
 
             Button(action: onTestNow) {
                 SettingsRowLabel(title: "Test it now", systemImage: "play.fill")

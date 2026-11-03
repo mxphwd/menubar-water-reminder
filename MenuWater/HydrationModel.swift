@@ -1,3 +1,5 @@
+import AppKit
+import ApplicationServices
 import Foundation
 import Observation
 import ServiceManagement
@@ -84,6 +86,7 @@ final class HydrationModel {
     var age: Int
     var gender: ProfileGender
     var errorMessage: String?
+    var isShowingAccessibilityInstructions = false
 
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private let reminderPresenter = ReminderPresenter()
@@ -101,7 +104,7 @@ final class HydrationModel {
         launchAtLogin = SMAppService.mainApp.status == .enabled
         hasDisplayNotch = defaults.bool(forKey: Keys.hasDisplayNotch)
         fullScreenReminder = defaults.bool(forKey: Keys.fullScreenReminder)
-        intensiveReminder = defaults.bool(forKey: Keys.intensiveReminder)
+        intensiveReminder = defaults.bool(forKey: Keys.intensiveReminder) && AXIsProcessTrusted()
         age = defaults.object(forKey: Keys.age) as? Int ?? 30
         gender = ProfileGender(rawValue: defaults.string(forKey: Keys.gender) ?? "") ?? .female
 
@@ -194,8 +197,24 @@ final class HydrationModel {
     }
 
     func updateIntensiveReminder(_ enabled: Bool) {
+        guard enabled else {
+            intensiveReminder = false
+            defaults.set(false, forKey: Keys.intensiveReminder)
+            errorMessage = nil
+            return
+        }
+
+        guard AXIsProcessTrusted() else {
+            intensiveReminder = false
+            defaults.set(false, forKey: Keys.intensiveReminder)
+            errorMessage = nil
+            isShowingAccessibilityInstructions = true
+            return
+        }
+
         intensiveReminder = enabled
         defaults.set(enabled, forKey: Keys.intensiveReminder)
+        errorMessage = nil
     }
 
     func updateLaunchAtLogin(_ enabled: Bool) {
@@ -238,6 +257,21 @@ final class HydrationModel {
         }
 
         return VolumeUnit(rawValue: savedValue ?? "") ?? .metric
+    }
+
+    func openAccessibilitySettings() {
+        isShowingAccessibilityInstructions = false
+        guard let settingsURL = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+        ) else {
+            return
+        }
+
+        NSWorkspace.shared.open(settingsURL)
+    }
+
+    func dismissAccessibilityInstructions() {
+        isShowingAccessibilityInstructions = false
     }
 
     private func resetIfNeeded() {
