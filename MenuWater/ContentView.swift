@@ -273,8 +273,12 @@ private struct ContainerSettings: View {
             }
 
             Button {
-                withAnimation(.snappy) {
-                    isOptionsExpanded.toggle()
+                if NSEvent.modifierFlags.contains(.command) {
+                    onTryNow()
+                } else {
+                    withAnimation(.snappy) {
+                        isOptionsExpanded.toggle()
+                    }
                 }
             } label: {
                 SettingsRowLabel(title: "Options", systemImage: "gearshape")
@@ -291,8 +295,7 @@ private struct ContainerSettings: View {
                     onDisplayNotchChange: onDisplayNotchChange,
                     onFullScreenReminderChange: onFullScreenReminderChange,
                     onIntensiveReminderChange: onIntensiveReminderChange,
-                    onLaunchAtLoginChange: onLaunchAtLoginChange,
-                    onTestNow: onTryNow
+                    onLaunchAtLoginChange: onLaunchAtLoginChange
                 )
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
@@ -374,7 +377,6 @@ private struct ReminderOptions: View {
     let onFullScreenReminderChange: (Bool) -> Void
     let onIntensiveReminderChange: (Bool) -> Void
     let onLaunchAtLoginChange: (Bool) -> Void
-    let onTestNow: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -422,11 +424,6 @@ private struct ReminderOptions: View {
                     .foregroundStyle(.tertiary)
             }
 
-            Button(action: onTestNow) {
-                SettingsRowLabel(title: "Test it now", systemImage: "play.fill")
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
         }
     }
 }
