@@ -89,7 +89,7 @@ final class HydrationModel {
     var isShowingAccessibilityInstructions = false
 
     @ObservationIgnored private let defaults: UserDefaults
-    @ObservationIgnored private let reminderPresenter = ReminderPresenter()
+    @ObservationIgnored private lazy var reminderPresenter = ReminderPresenter()
     @ObservationIgnored private var reminderTimer: Timer?
     @ObservationIgnored private var midnightTimer: Timer?
 
@@ -98,7 +98,8 @@ final class HydrationModel {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         count = defaults.integer(forKey: Keys.count)
-        intervalMinutes = defaults.object(forKey: Keys.interval) as? Int ?? 60
+        let savedInterval = defaults.object(forKey: Keys.interval) as? Int ?? 60
+        intervalMinutes = intervalOptions.contains(savedInterval) ? savedInterval : 60
         volumeML = defaults.object(forKey: Keys.volumeML) as? Double ?? 350
         volumeUnit = Self.savedVolumeUnit(from: defaults)
         launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -161,6 +162,9 @@ final class HydrationModel {
     }
 
     func updateInterval(_ minutes: Int) {
+        guard intervalOptions.contains(minutes), minutes != intervalMinutes else {
+            return
+        }
         intervalMinutes = minutes
         defaults.set(minutes, forKey: Keys.interval)
         scheduleReminder()
@@ -310,6 +314,8 @@ final class HydrationModel {
             }
         }
 
+        // Coalesce background wakeups without noticeably delaying a reminder.
+        timer.tolerance = 5
         reminderTimer = timer
         RunLoop.main.add(timer, forMode: .common)
     }
@@ -334,6 +340,7 @@ final class HydrationModel {
         }
 
         if let midnightTimer {
+            midnightTimer.tolerance = 1
             RunLoop.main.add(midnightTimer, forMode: .common)
         }
     }

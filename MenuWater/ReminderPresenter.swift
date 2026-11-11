@@ -90,7 +90,8 @@ final class ReminderPresenter {
                     rootView: IntensiveDimmingOverlay(challenge: challenge)
                 )
             } else {
-                panel.contentView = NSHostingView(rootView: FullScreenDimmingOverlay())
+                // A uniform shade needs no SwiftUI view graph or hosting layers.
+                panel.backgroundColor = NSColor.black.withAlphaComponent(0.50)
             }
             panel.alphaValue = 0
             dimmingPanel = panel
@@ -165,8 +166,8 @@ final class ReminderPresenter {
             }
         } completionHandler: {
             for panel in presentation.panels {
-                panel.orderOut(nil)
                 panel.contentView = nil
+                panel.close()
             }
             presentation.previousApplication?.activate()
         }
@@ -181,7 +182,7 @@ final class ReminderPresenter {
         stopIntensiveKeyMonitoring()
         for panel in presentation.panels {
             panel.contentView = nil
-            panel.orderOut(nil)
+            panel.close()
         }
     }
 
@@ -207,6 +208,7 @@ final class ReminderPresenter {
             )
         }
 
+        panel.isReleasedWhenClosed = false
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
@@ -293,6 +295,7 @@ private final class GlobalKeyInterceptor {
         }
         if let eventTap {
             CGEvent.tapEnable(tap: eventTap, enable: false)
+            CFMachPortInvalidate(eventTap)
             self.eventTap = nil
         }
     }
@@ -393,12 +396,6 @@ private final class IntensiveChallenge {
         }
 
         return enteredCount == keys.count
-    }
-}
-
-private struct FullScreenDimmingOverlay: View {
-    var body: some View {
-        Color.black.opacity(0.50)
     }
 }
 
